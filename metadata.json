@@ -1,6 +1,6 @@
 {
-  "name": "QueryForge",
-  "description": "Générateur de requêtes de recherche optimisées pour Google, YouTube, Reddit et plus.",
+  "name": "franzforge",
+  "description": "Générateur de requêtes de recherche optimisées par Franz.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

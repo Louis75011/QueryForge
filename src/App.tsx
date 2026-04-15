@@ -22,23 +22,34 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-type ContentType = 'text' | 'image' | 'video' | 'pdf' | 'music' | 'file';
+type ContentType = 'text' | 'image' | 'video' | 'pdf' | 'music' | 'file' | 'code' | 'social';
+type DateFilter = 'all' | 'day' | 'week' | 'month' | 'year';
+type Language = 'fr' | 'en';
 
 interface Platform {
   id: string;
   name: string;
   emoji: string;
-  generateQuery: (input: string, type: ContentType) => string;
+  generateQuery: (input: string, type: ContentType, date: DateFilter, lang: Language) => string;
   generateUrl: (query: string) => string;
 }
 
 const CONTENT_TYPES: { id: ContentType; label: string; icon: any }[] = [
-  { id: 'text', label: 'Texte/Article', icon: Type },
+  { id: 'text', label: 'Texte', icon: Type },
   { id: 'image', label: 'Image', icon: ImageIcon },
   { id: 'video', label: 'Vidéo', icon: Video },
-  { id: 'pdf', label: 'PDF/Livre', icon: FileText },
-  { id: 'music', label: 'Musique', icon: Music },
-  { id: 'file', label: 'Torrent/Fichier', icon: Download },
+  { id: 'pdf', label: 'PDF', icon: FileText },
+  { id: 'code', label: 'Code', icon: Github },
+  { id: 'social', label: 'Social', icon: Globe },
+  { id: 'file', label: 'Fichier', icon: Download },
+];
+
+const DATE_FILTERS: { id: DateFilter; label: string }[] = [
+  { id: 'all', label: 'Toute période' },
+  { id: 'day', label: '24h' },
+  { id: 'week', label: 'Semaine' },
+  { id: 'month', label: 'Mois' },
+  { id: 'year', label: 'Année' },
 ];
 
 const PLATFORMS: Platform[] = [
@@ -46,66 +57,92 @@ const PLATFORMS: Platform[] = [
     id: 'google',
     name: 'Google',
     emoji: '🔍',
-    generateQuery: (input, type) => {
+    generateQuery: (input, type, date, lang) => {
       if (!input) return '';
-      switch (type) {
-        case 'pdf': return `filetype:pdf "${input}"`;
-        case 'text': return `intitle:"${input}" OR "${input}"`;
-        case 'file': return `"${input}" (index of) (mp4|mkv|zip|rar)`;
-        default: return `"${input}"`;
-      }
+      let q = `"${input}"`;
+      if (type === 'pdf') q += ' filetype:pdf';
+      if (type === 'text') q = `intitle:"${input}" OR "${input}"`;
+      if (lang === 'en') q += ' lang:en';
+      return q;
     },
     generateUrl: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
   },
   {
     id: 'google-images',
-    name: 'Google Images',
+    name: 'Images',
     emoji: '🖼️',
-    generateQuery: (input, type) => {
-      if (!input) return '';
-      return `"${input}" imagesize:1920x1080 filetype:jpg`;
-    },
+    generateQuery: (input) => `"${input}" imagesize:1920x1080 filetype:jpg`,
     generateUrl: (query) => `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
   },
   {
     id: 'youtube',
     name: 'YouTube',
     emoji: '📺',
-    generateQuery: (input, type) => {
-      if (!input) return '';
-      return `"${input}", long`;
-    },
+    generateQuery: (input) => `"${input}", long`,
     generateUrl: (query) => `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
   },
   {
-    id: 'books',
-    name: 'Books / Archive',
-    emoji: '📚',
-    generateQuery: (input, type) => {
-      if (!input) return '';
-      return `site:archive.org OR site:libgen.is "${input}"`;
-    },
-    generateUrl: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+    id: 'github',
+    name: 'GitHub',
+    emoji: '💻',
+    generateQuery: (input) => `${input} language:typescript`,
+    generateUrl: (query) => `https://github.com/search?q=${encodeURIComponent(query)}&type=repositories`,
   },
   {
-    id: 'ddg',
-    name: 'DuckDuckGo',
-    emoji: '🦆',
-    generateQuery: (input, type) => {
-      if (!input) return '';
-      return `!g "${input}"`;
-    },
-    generateUrl: (query) => `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
+    id: 'stackoverflow',
+    name: 'StackOverflow',
+    emoji: '🥞',
+    generateQuery: (input) => `[javascript] "${input}"`,
+    generateUrl: (query) => `https://stackoverflow.com/search?q=${encodeURIComponent(query)}`,
   },
   {
     id: 'reddit',
     name: 'Reddit',
     emoji: '🤖',
-    generateQuery: (input, type) => {
-      if (!input) return '';
-      return `site:reddit.com "${input}"`;
-    },
+    generateQuery: (input) => `site:reddit.com "${input}"`,
     generateUrl: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'twitter',
+    name: 'Twitter / X',
+    emoji: '🐦',
+    generateQuery: (input) => `"${input}" min_faves:10`,
+    generateUrl: (query) => `https://twitter.com/search?q=${encodeURIComponent(query)}&f=top`,
+  },
+  {
+    id: 'pinterest',
+    name: 'Pinterest',
+    emoji: '📌',
+    generateQuery: (input) => `"${input}" aesthetic`,
+    generateUrl: (query) => `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'wikipedia',
+    name: 'Wikipedia',
+    emoji: '📖',
+    generateQuery: (input) => `intitle:"${input}"`,
+    generateUrl: (query) => `https://fr.wikipedia.org/w/index.php?search=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'scholar',
+    name: 'Scholar',
+    emoji: '🎓',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) => `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'linkedin',
+    name: 'LinkedIn',
+    emoji: '💼',
+    generateQuery: (input) => `site:linkedin.com/posts "${input}"`,
+    generateUrl: (query) => `https://www.google.com/search?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'archive',
+    name: 'Archive',
+    emoji: '🏛️',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) => `https://archive.org/details/texts?query=${encodeURIComponent(query)}`,
   },
 ];
 
@@ -120,6 +157,8 @@ const IMAGE_TOOLS = [
 export default function App() {
   const [query, setQuery] = useState('');
   const [contentType, setContentType] = useState<ContentType>('text');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [language, setLanguage] = useState<Language>('fr');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = (text: string, id: string) => {
@@ -131,25 +170,25 @@ export default function App() {
   const results = useMemo(() => {
     if (!query.trim()) return [];
     return PLATFORMS.map(p => {
-      const generated = p.generateQuery(query, contentType);
+      const generated = p.generateQuery(query, contentType, dateFilter, language);
       return {
         ...p,
         generated,
         url: p.generateUrl(generated)
       };
     });
-  }, [query, contentType]);
+  }, [query, contentType, dateFilter, language]);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-5xl mx-auto px-8 py-8">
+    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-8 py-8">
       {/* Header */}
       <header className="mb-6 flex items-baseline gap-3">
         <motion.h1 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[28px] font-extrabold tracking-tight text-brand"
+          className="text-[28px] font-extrabold tracking-tight text-brand lowercase"
         >
-          QueryForge
+          franzforge
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0 }}
@@ -157,7 +196,7 @@ export default function App() {
           transition={{ delay: 0.2 }}
           className="text-sm text-gray-500 font-medium"
         >
-          Générateur de requêtes optimisées pour professionnels.
+          la forge à requêtes par franz.
         </motion.p>
       </header>
 
@@ -165,9 +204,24 @@ export default function App() {
       <main className="flex-grow flex flex-col">
         <div className="mb-6">
           <div className="flex flex-col gap-3">
-            <label className="text-[11px] uppercase font-bold tracking-wider text-ink">
-              Que cherchez-vous ?
-            </label>
+            <div className="flex justify-between items-end">
+              <label className="text-[11px] uppercase font-bold tracking-wider text-ink">
+                Que cherchez-vous ?
+              </label>
+              <div className="flex gap-4">
+                <div className="flex bg-surface p-1 rounded-lg">
+                  {(['fr', 'en'] as Language[]).map(l => (
+                    <button
+                      key={l}
+                      onClick={() => setLanguage(l)}
+                      className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded ${language === l ? 'bg-white shadow-sm' : 'text-gray-400'}`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
             <div className="relative">
               <input
                 type="text"
@@ -194,10 +248,26 @@ export default function App() {
               </button>
             ))}
           </div>
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {DATE_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setDateFilter(f.id)}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase transition-all ${
+                  dateFilter === f.id 
+                    ? 'bg-ink text-white' 
+                    : 'bg-white text-gray-400 border border-border hover:border-gray-300'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Results Grid - Bento Style */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-grow mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow mb-6">
           <AnimatePresence mode="popLayout">
             {results.map((res, idx) => (
               <motion.div
@@ -205,7 +275,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: idx * 0.03 }}
+                transition={{ delay: idx * 0.02 }}
                 className="bg-surface p-4 rounded-xl flex flex-col justify-between"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -216,14 +286,14 @@ export default function App() {
                   <span className="accent-dot"></span>
                 </div>
                 
-                <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[12px] text-gray-700 border border-border break-all min-h-[48px]">
+                <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[11px] text-gray-700 border border-border break-all min-h-[48px]">
                   {res.generated}
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleCopy(res.generated, res.id)}
-                    className={`flex-1 py-2 rounded-md text-[12px] font-bold transition-all ${
+                    className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all ${
                       copiedId === res.id 
                         ? 'bg-green-500 text-white' 
                         : 'bg-[#E5E5E5] text-ink hover:bg-gray-300'
@@ -235,7 +305,7 @@ export default function App() {
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 py-2 bg-ink text-white rounded-md text-[12px] font-bold hover:bg-black transition-all text-center"
+                    className="flex-1 py-2 bg-ink text-white rounded-md text-[11px] font-bold hover:bg-black transition-all text-center"
                   >
                     Ouvrir
                   </a>
@@ -246,7 +316,7 @@ export default function App() {
           
           {!query && (
             <div className="col-span-full flex items-center justify-center py-20 bg-surface rounded-xl text-gray-400 italic text-sm">
-              Saisissez quelque chose pour voir les requêtes optimisées...
+              Saisissez quelque chose pour forger vos requêtes...
             </div>
           )}
         </div>
