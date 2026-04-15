@@ -284,9 +284,25 @@ export default function App() {
   }, [query, contentType, dateFilter, language]);
 
   return (
-    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8 py-8">
+    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8">
+
+      {/* Nav sticky */}
+      <nav
+        aria-label="Navigation principale"
+        className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-border -mx-4 sm:-mx-8 px-4 sm:px-8 mb-8"
+      >
+        <div className="flex items-center justify-between h-14">
+          <span className="font-extrabold text-[13px] text-brand tracking-widest uppercase">FranzForge</span>
+          <div className="flex items-center gap-6">
+            <a href="#forge" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Requête</a>
+            <a href="#outils" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Outils</a>
+            <a href="#liens" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Liens</a>
+          </div>
+        </div>
+      </nav>
+
       {/* Header */}
-      <header className="mb-8 flex items-center gap-5">
+      <header className="mb-10 flex items-center gap-5">
         <motion.img
           src="/images/ff-franz-forge-logo.jpg"
           alt="FranzForge logo"
@@ -314,7 +330,7 @@ export default function App() {
       </header>
 
       {/* Main Search Section */}
-      <main className="flex-grow flex flex-col">
+      <main id="forge" className="flex-grow flex flex-col" aria-label="Forge de requêtes">
         <div className="mb-6">
           <div className="flex flex-col gap-3">
             <div className="flex flex-wrap justify-between items-center gap-2">
@@ -339,7 +355,7 @@ export default function App() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Saisissez votre recherche..."
-                className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-lg outline-none focus:ring-0 transition-all placeholder:text-gray-400"
+                className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-xl outline-none focus:border-brand transition-all placeholder:text-gray-300 shadow-sm"
               />
             </div>
           </div>
@@ -385,7 +401,7 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ delay: idx * 0.02 }}
-                className="bg-surface p-4 rounded-xl flex flex-col justify-between"
+                className="bg-surface p-4 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
@@ -423,8 +439,9 @@ export default function App() {
           </AnimatePresence>
 
           {!query && (
-            <div className="col-span-full flex items-center justify-center py-20 bg-surface rounded-xl text-gray-400 italic text-sm">
-              Saisissez quelque chose pour forger vos requêtes...
+            <div className="col-span-full flex flex-col items-center justify-center py-24 bg-surface rounded-2xl gap-3">
+              <span className="text-4xl" aria-hidden="true">⚒️</span>
+              <p className="text-sm text-gray-400 font-medium">Saisissez quelque chose pour forger vos requêtes.</p>
             </div>
           )}
         </div>
@@ -432,10 +449,10 @@ export default function App() {
 
       <footer className="flex flex-col gap-6 pt-6 border-t border-border mt-auto">
         {/* Traduction */}
-        <section>
-          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+        <section id="outils">
+          <h2 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Traduction rapide
-          </h3>
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {TRANSLATION_TOOLS.map(tool => (
               <a
@@ -462,9 +479,9 @@ export default function App() {
 
         {/* Outils Image */}
         <section className="pt-6 border-t border-border">
-          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+          <h2 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Outils Image
-          </h3>
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {IMAGE_TOOLS.map((tool) => (
               <a
@@ -491,10 +508,10 @@ export default function App() {
       </footer>
 
       {/* Transcription audio / vidéo */}
-      <section className="pt-6 border-t border-border mt-6">
-        <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+      <section id="liens" className="pt-6 border-t border-border mt-6">
+        <h2 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
           Retranscription audio / vidéo
-        </h3>
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
           {TRANSCRIPTION_TOOLS.map((tool) => (
             <a
@@ -525,10 +542,26 @@ export default function App() {
       <div className="mt-8 pt-6 border-t border-border">
         <img
           src="/images/site-banniere.jpg"
-          alt="FranzForge"
+          alt="FranzForge — La forge à requêtes de recherche web par Arx Systema"
           className="w-full rounded-2xl object-cover"
         />
       </div>
+
+      {/* Footer Arx Systema */}
+      <footer role="contentinfo" className="mt-10 py-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-[11px] text-gray-400 tracking-wide">
+          Propulsé par{' '}
+          <a
+            href="https://arxsystema.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-ink hover:text-brand transition-colors"
+          >
+            Arx Systema
+          </a>
+        </p>
+        <p className="text-[11px] text-gray-300 tracking-wide">FranzForge · © 2026 · Tous droits réservés</p>
+      </footer>
     </div>
   );
 }
