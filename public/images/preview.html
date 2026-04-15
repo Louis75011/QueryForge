@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FF Franz Forge – Favicon Preview</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <style>
+    body { background: #1a1a1e; color: #eee; font-family: monospace; padding: 2rem; }
+    h1 { color: #cc0000; }
+    .grid { display: flex; flex-wrap: wrap; gap: 2rem; align-items: flex-end; margin: 2rem 0; }
+    .item { text-align: center; }
+    .item span { display: block; font-size: 0.7rem; color: #888; margin-top: 0.4rem; }
+    .snippet { background: #111; border: 1px solid #333; padding: 1rem; border-radius: 6px; font-size: 0.82rem; line-height: 1.6; color: #9cdcfe; }
+    .files { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.4rem; margin: 1rem 0; }
+    .file { background: #111; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.8rem; color: #6ee; }
+  </style>
+</head>
+<body>
+  <h1>⚡ FF Franz Forge – Favicon Package</h1>
+
+  <h2>Aperçu toutes tailles</h2>
+  <div class="grid">
+    <div class="item"><img src="favicon-512x512.png" width="128" height="128"><span>512×512</span></div>
+    <div class="item"><img src="favicon-192x192.png" width="96" height="96"><span>192×192</span></div>
+    <div class="item"><img src="favicon-96x96.png" width="96" height="96"><span>96×96</span></div>
+    <div class="item"><img src="favicon-64x64.png" width="64" height="64"><span>64×64</span></div>
+    <div class="item"><img src="favicon-48x48.png" width="48" height="48"><span>48×48</span></div>
+    <div class="item"><img src="favicon-32x32.png" width="32" height="32"><span>32×32</span></div>
+    <div class="item"><img src="favicon-16x16.png" width="16" height="16"><span>16×16</span></div>
+  </div>
+
+  <h2>Fichiers inclus</h2>
+  <div class="files">
+    <div class="file">📄 favicon.svg (scalable – moderne)</div>
+    <div class="file">🖼️ favicon.ico (16+32+48 – legacy)</div>
+    <div class="file">🖼️ favicon-16x16.png</div>
+    <div class="file">🖼️ favicon-32x32.png</div>
+    <div class="file">🍎 apple-touch-icon.png (180×180)</div>
+    <div class="file">🤖 android-chrome-192x192.png</div>
+    <div class="file">🤖 android-chrome-512x512.png</div>
+    <div class="file">📋 site.webmanifest (PWA)</div>
+  </div>
+
+  <h2>Snippet &lt;head&gt; à copier</h2>
+  <div class="snippet">
+&lt;link rel="icon" type="image/svg+xml" href="/favicon.svg"&gt;<br>
+&lt;link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"&gt;<br>
+&lt;link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"&gt;<br>
+&lt;link rel="shortcut icon" href="/favicon.ico"&gt;<br>
+&lt;link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"&gt;<br>
+&lt;link rel="manifest" href="/site.webmanifest"&gt;<br>
+&lt;meta name="theme-color" content="#cc0000"&gt;
+  </div>
+</body>
+</html>

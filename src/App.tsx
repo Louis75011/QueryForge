@@ -298,9 +298,9 @@ export default function App() {
           <motion.h1
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[42px] font-extrabold tracking-tight text-brand lowercase leading-none"
+            className="text-[42px] font-extrabold tracking-tight text-brand leading-none"
           >
-            franzforge
+            FranzForge
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
@@ -308,7 +308,7 @@ export default function App() {
             transition={{ delay: 0.2 }}
             className="text-base text-gray-500 font-medium mt-1"
           >
-            la forge à requêtes par franz.
+            La forge à requêtes de Franz.
           </motion.p>
         </div>
       </header>
