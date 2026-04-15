@@ -1,0 +1,427 @@
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+
+type ContentType = 'text' | 'image' | 'video' | 'pdf' | 'social' | 'file';
+type DateFilter = 'all' | 'day' | 'week' | 'month' | 'year';
+type Language = 'fr' | 'en' | 'es' | 'pt' | 'it' | 'de' | 'nl';
+
+interface Platform {
+  id: string;
+  name: string;
+  emoji: string;
+  generateQuery: (input: string, type: ContentType, date: DateFilter, lang: Language) => string;
+  generateUrl: (query: string, date: DateFilter, lang: Language) => string;
+}
+
+const CONTENT_TYPES: { id: ContentType; label: string }[] = [
+  { id: 'text', label: 'Texte' },
+  { id: 'image', label: 'Image' },
+  { id: 'video', label: 'Vidéo' },
+  { id: 'pdf', label: 'PDF' },
+  { id: 'social', label: 'Social' },
+  { id: 'file', label: 'Fichier' },
+];
+
+const DATE_FILTERS: { id: DateFilter; label: string }[] = [
+  { id: 'all', label: 'Toute période' },
+  { id: 'day', label: '24h' },
+  { id: 'week', label: 'Semaine' },
+  { id: 'month', label: 'Mois' },
+  { id: 'year', label: 'Année' },
+];
+
+const LANGUAGES: { id: Language; label: string }[] = [
+  { id: 'fr', label: 'FR' },
+  { id: 'en', label: 'EN' },
+  { id: 'es', label: 'ES' },
+  { id: 'pt', label: 'PT' },
+  { id: 'it', label: 'IT' },
+  { id: 'de', label: 'DE' },
+  { id: 'nl', label: 'NL' },
+];
+
+const GOOGLE_DATE: Record<DateFilter, string> = {
+  all: '', day: '&tbs=qdr:d', week: '&tbs=qdr:w', month: '&tbs=qdr:m', year: '&tbs=qdr:y',
+};
+const YOUTUBE_DATE: Record<DateFilter, string> = {
+  all: '', day: '&sp=EgIIAQ%3D%3D', week: '&sp=EgIIAw%3D%3D', month: '&sp=EgIIBA%3D%3D', year: '',
+};
+const REDDIT_DATE: Record<DateFilter, string> = {
+  all: '', day: '&t=day', week: '&t=week', month: '&t=month', year: '&t=year',
+};
+
+const TRANSLATION_TOOLS = [
+  {
+    name: 'DeepL',
+    getUrl: (q: string, lang: Language) =>
+      `https://www.deepl.com/translator#${lang}/${lang === 'en' ? 'fr' : 'en'}/${encodeURIComponent(q)}`,
+  },
+  {
+    name: 'ChatGPT',
+    getUrl: (q: string, lang: Language) =>
+      `https://chatgpt.com/?q=Traduis+en+${lang === 'fr' ? 'anglais' : 'fran%C3%A7ais'}+et+optimise+pour+la+recherche+:+${encodeURIComponent(q)}`,
+  },
+  {
+    name: 'Linguee',
+    getUrl: (q: string, _lang: Language) =>
+      `https://www.linguee.fr/francais-anglais/search?query=${encodeURIComponent(q)}`,
+  },
+];
+
+const PLATFORMS: Platform[] = [
+  {
+    id: 'google',
+    name: 'Google',
+    emoji: '🔍',
+    generateQuery: (input, type) => {
+      if (!input) return '';
+      if (type === 'pdf') return `"${input}" filetype:pdf`;
+      if (type === 'file') return `"${input}" filetype:pdf OR filetype:epub OR filetype:doc`;
+      if (type === 'text') return `intitle:"${input}" OR "${input}"`;
+      return `"${input}"`;
+    },
+    generateUrl: (query, date, lang) =>
+      `https://www.google.com/search?q=${encodeURIComponent(query)}&lr=lang_${lang}${GOOGLE_DATE[date]}`,
+  },
+  {
+    id: 'google-books',
+    name: 'Google Livres',
+    emoji: '📚',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query, date, lang) =>
+      `https://www.google.com/search?tbm=bks&q=${encodeURIComponent(query)}&lr=lang_${lang}${GOOGLE_DATE[date]}`,
+  },
+  {
+    id: 'wikipedia',
+    name: 'Wikip\u00e9dia',
+    emoji: '📖',
+    generateQuery: (input) => input,
+    generateUrl: (query, _date, lang) =>
+      `https://${lang}.wikipedia.org/w/index.php?search=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'wikisource',
+    name: 'Wikisource',
+    emoji: '📜',
+    generateQuery: (input) => input,
+    generateUrl: (query, _date, lang) =>
+      `https://${lang}.wikisource.org/w/index.php?search=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'archive',
+    name: 'Archive.org',
+    emoji: '🏛️',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) =>
+      `https://archive.org/search?query=${encodeURIComponent(query)}&mediatype=texts`,
+  },
+  {
+    id: 'gallica',
+    name: 'Gallica',
+    emoji: '🗺️',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) =>
+      `https://gallica.bnf.fr/services/engine/search/sru?operation=searchRetrieve&version=1.2&query=${encodeURIComponent(`(gallica all "${query}")`)}`,
+  },
+  {
+    id: 'gutenberg',
+    name: 'Gutenberg',
+    emoji: '📕',
+    generateQuery: (input) => input,
+    generateUrl: (query) =>
+      `https://www.gutenberg.org/ebooks/search/?query=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'openlibrary',
+    name: 'Open Library',
+    emoji: '📗',
+    generateQuery: (input) => input,
+    generateUrl: (query) =>
+      `https://openlibrary.org/search?q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'scholar',
+    name: 'Scholar',
+    emoji: '🎓',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query, date, lang) =>
+      `https://scholar.google.com/scholar?q=${encodeURIComponent(query)}&lr=lang_${lang}${GOOGLE_DATE[date]}`,
+  },
+  {
+    id: 'persee',
+    name: 'Pers\u00e9e',
+    emoji: '🏺',
+    generateQuery: (input) => input,
+    generateUrl: (query) =>
+      `https://www.persee.fr/search#cas=1&q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'babelio',
+    name: 'Babelio',
+    emoji: '✍️',
+    generateQuery: (input) => input,
+    generateUrl: (query) =>
+      `https://www.babelio.com/recherche.php?Recherche=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    emoji: '📺',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query, date) =>
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}${YOUTUBE_DATE[date]}`,
+  },
+  {
+    id: 'reddit',
+    name: 'Reddit',
+    emoji: '🗨️',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query, date) =>
+      `https://www.reddit.com/search/?q=${encodeURIComponent(query)}&sort=relevance${REDDIT_DATE[date]}`,
+  },
+  {
+    id: 'twitter',
+    name: 'X / Twitter',
+    emoji: '🐦',
+    generateQuery: (input) => `"${input}" min_faves:5`,
+    generateUrl: (query) =>
+      `https://twitter.com/search?q=${encodeURIComponent(query)}&f=top`,
+  },
+  {
+    id: 'google-images',
+    name: 'Google Images',
+    emoji: '🖼️',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) =>
+      `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(query)}`,
+  },
+  {
+    id: 'pinterest',
+    name: 'Pinterest',
+    emoji: '📌',
+    generateQuery: (input) => `"${input}"`,
+    generateUrl: (query) =>
+      `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(query)}`,
+  },
+];
+
+const IMAGE_TOOLS = [
+  { name: 'Remove.bg', url: 'https://www.remove.bg/', desc: 'Suppression fond' },
+  { name: 'Cleanup.pictures', url: 'https://cleanup.pictures/', desc: 'Suppression objet' },
+  { name: 'Upscayl', url: 'https://www.upscayl.org/', desc: 'Amélioration qualité' },
+  { name: 'Iloveimg', url: 'https://www.iloveimg.com/fr', desc: 'Édition complète' },
+  { name: 'Palette.fm', url: 'https://palette.fm/', desc: 'Colorisation' },
+];
+
+export default function App() {
+  const [query, setQuery] = useState('');
+  const [contentType, setContentType] = useState<ContentType>('text');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [language, setLanguage] = useState<Language>('fr');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
+    return PLATFORMS.map(p => {
+      const generated = p.generateQuery(query, contentType, dateFilter, language);
+      return {
+        ...p,
+        generated,
+        url: p.generateUrl(generated, dateFilter, language),
+      };
+    });
+  }, [query, contentType, dateFilter, language]);
+
+  return (
+    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8 py-8">
+      {/* Header */}
+      <header className="mb-6 flex items-baseline gap-3">
+        <motion.h1 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-[28px] font-extrabold tracking-tight text-brand"
+        >
+          FranzForge
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-sm text-gray-500 font-medium"
+        >
+          La forge à requêtes de Franz.
+        </motion.p>
+      </header>
+
+      {/* Main Search Section */}
+      <main className="flex-grow flex flex-col">
+        <div className="mb-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <label className="text-[11px] uppercase font-bold tracking-wider text-ink">
+                Que cherchez-vous ?
+              </label>
+              <div className="flex bg-surface p-1 rounded-lg gap-0.5 flex-wrap">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.id}
+                    onClick={() => setLanguage(l.id)}
+                    className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded cursor-pointer transition-all ${language === l.id ? 'bg-white shadow-sm text-ink' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Saisissez votre recherche..."
+                className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-lg outline-none focus:ring-0 transition-all placeholder:text-gray-400"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            {CONTENT_TYPES.map((type) => (
+              <button
+                key={type.id}
+                onClick={() => setContentType(type.id)}
+                className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all cursor-pointer ${
+                  contentType === type.id 
+                    ? 'bg-brand text-white' 
+                    : 'bg-surface text-ink hover:bg-gray-200'
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {DATE_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setDateFilter(f.id)}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase transition-all cursor-pointer ${
+                  dateFilter === f.id 
+                    ? 'bg-ink text-white' 
+                    : 'bg-white text-gray-400 border border-border hover:border-gray-400'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Results Grid - Bento Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow mb-6">
+          <AnimatePresence mode="popLayout">
+            {results.map((res, idx) => (
+              <motion.div
+                key={res.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: idx * 0.02 }}
+                className="bg-surface p-4 rounded-xl flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg">{res.emoji}</span>
+                    <h3 className="font-bold text-sm uppercase tracking-tight">{res.name}</h3>
+                  </div>
+                  <span className="accent-dot"></span>
+                </div>
+                
+                <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[11px] text-gray-700 border border-border break-all min-h-[48px]">
+                  {res.generated}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCopy(res.generated, res.id)}
+                    className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                      copiedId === res.id 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-[#E5E5E5] text-ink hover:bg-gray-300'
+                    }`}
+                  >
+                    {copiedId === res.id ? 'Copié !' : 'Copier'}
+                  </button>
+                  <a
+                    href={res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 bg-ink text-white rounded-md text-[11px] font-bold hover:bg-black transition-all text-center cursor-pointer"
+                  >
+                    Ouvrir
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          
+          {!query && (
+            <div className="col-span-full flex items-center justify-center py-20 bg-surface rounded-xl text-gray-400 italic text-sm">
+              Saisissez quelque chose pour forger vos requêtes...
+            </div>
+          )}
+        </div>
+      </main>
+
+      <footer className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 pt-6 border-t border-border mt-auto">
+        {/* Traduction */}
+        <section>
+          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+            Traduction rapide
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
+            {TRANSLATION_TOOLS.map(tool => (
+              <a
+                key={tool.name}
+                href={tool.getUrl(query, language)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 min-w-[70px] bg-surface py-2.5 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer"
+              >
+                {tool.name}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Outils Image */}
+        <section>
+          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+            Outils Image
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
+            {IMAGE_TOOLS.map((tool) => (
+              <a
+                key={tool.name}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={tool.desc}
+                className="bg-surface py-2.5 px-3 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
+              >
+                {tool.name}
+              </a>
+            ))}
+          </div>
+        </section>
+      </footer>
+    </div>
+  );
+}
+
