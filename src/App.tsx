@@ -430,7 +430,7 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border mt-auto">
+      <footer className="flex flex-col gap-6 pt-6 border-t border-border mt-auto">
         {/* Traduction */}
         <section>
           <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
@@ -465,7 +465,7 @@ export default function App() {
           <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Outils Image
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {IMAGE_TOOLS.map((tool) => (
               <a
                 key={tool.name}
