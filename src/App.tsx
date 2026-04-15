@@ -461,7 +461,7 @@ export default function App() {
         </section>
 
         {/* Outils Image */}
-        <section>
+        <section className="pt-6 border-t border-border">
           <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Outils Image
           </h3>
@@ -520,6 +520,15 @@ export default function App() {
           ))}
         </div>
       </section>
+
+      {/* Bannière */}
+      <div className="mt-8 pt-6 border-t border-border">
+        <img
+          src="/images/site-banniere.jpg"
+          alt="FranzForge"
+          className="w-full rounded-2xl object-cover"
+        />
+      </div>
     </div>
   );
 }
