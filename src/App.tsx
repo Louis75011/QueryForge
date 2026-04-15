@@ -50,21 +50,27 @@ const REDDIT_DATE: Record<DateFilter, string> = {
   all: '', day: '&t=day', week: '&t=week', month: '&t=month', year: '&t=year',
 };
 
-const TRANSLATION_TOOLS = [
+const TRANSLATION_TOOLS: { name: string; url?: string; getUrl?: (q: string, lang: Language) => string; desc: string; specs: string[] }[] = [
   {
     name: 'DeepL',
     getUrl: (q: string, lang: Language) =>
       `https://www.deepl.com/translator#${lang}/${lang === 'en' ? 'fr' : 'en'}/${encodeURIComponent(q)}`,
+    desc: 'Traduction neurale haute précision, la référence professionnelle.',
+    specs: ['50+ langues', 'Contexte préservé', 'Gratuit / Pro'],
   },
   {
     name: 'ChatGPT',
     getUrl: (q: string, lang: Language) =>
       `https://chatgpt.com/?q=Traduis+en+${lang === 'fr' ? 'anglais' : 'fran%C3%A7ais'}+et+optimise+pour+la+recherche+:+${encodeURIComponent(q)}`,
+    desc: 'Traduction + optimisation de la requête en langage naturel.',
+    specs: ['Toutes langues', 'Adaptatif', 'Compte requis'],
   },
   {
     name: 'Linguee',
     getUrl: (q: string, _lang: Language) =>
       `https://www.linguee.fr/francais-anglais/search?query=${encodeURIComponent(q)}`,
+    desc: 'Traductions contextuelles avec exemples de phrases réelles.',
+    specs: ['20+ langues', 'Exemples réels', 'Gratuit'],
   },
 ];
 
@@ -205,12 +211,12 @@ const PLATFORMS: Platform[] = [
   },
 ];
 
-const IMAGE_TOOLS = [
-  { name: 'Remove.bg', url: 'https://www.remove.bg/', desc: 'Suppression fond' },
-  { name: 'Cleanup.pictures', url: 'https://cleanup.pictures/', desc: 'Suppression objet' },
-  { name: 'Upscayl', url: 'https://www.upscayl.org/', desc: 'Amélioration qualité' },
-  { name: 'Iloveimg', url: 'https://www.iloveimg.com/fr', desc: 'Édition complète' },
-  { name: 'Palette.fm', url: 'https://palette.fm/', desc: 'Colorisation' },
+const IMAGE_TOOLS: { name: string; url: string; desc: string; specs: string[] }[] = [
+  { name: 'Remove.bg', url: 'https://www.remove.bg/', desc: 'Supprime le fond d’une image en un clic.', specs: ['PNG / JPG', 'Résultat instant', 'Gratuit / Pro'] },
+  { name: 'Cleanup.pictures', url: 'https://cleanup.pictures/', desc: 'Efface un objet ou une personne indésirable.', specs: ['Brush IA', 'PNG / JPG', 'Gratuit / Pro'] },
+  { name: 'Upscayl', url: 'https://www.upscayl.org/', desc: 'Augmente la résolution sans perte de qualité.', specs: ['x2 à x8', 'Logiciel local', 'Gratuit'] },
+  { name: 'Iloveimg', url: 'https://www.iloveimg.com/fr', desc: 'Suite complète d’édition d’images en ligne.', specs: ['15+ outils', 'Sans inscription', 'Gratuit / Pro'] },
+  { name: 'Palette.fm', url: 'https://palette.fm/', desc: 'Colorise automatiquement les photos en noir & blanc.', specs: ['Photos NB', 'IA colorisation', 'Gratuit'] },
 ];
 
 const TRANSCRIPTION_TOOLS: {
@@ -280,19 +286,19 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8 py-8">
       {/* Header */}
-      <header className="mb-6 flex items-center gap-4">
+      <header className="mb-8 flex items-center gap-5">
         <motion.img
           src="/images/ff-franz-forge-logo.jpg"
           alt="FranzForge logo"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
+          className="h-20 w-20 rounded-2xl object-cover flex-shrink-0 shadow-md"
         />
         <div className="flex flex-col">
           <motion.h1
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-[26px] font-extrabold tracking-tight text-brand lowercase leading-none"
+            className="text-[42px] font-extrabold tracking-tight text-brand lowercase leading-none"
           >
             franzforge
           </motion.h1>
@@ -300,7 +306,7 @@ export default function App() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="text-sm text-gray-500 font-medium mt-0.5"
+            className="text-base text-gray-500 font-medium mt-1"
           >
             la forge à requêtes par franz.
           </motion.p>
@@ -424,22 +430,31 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 pt-6 border-t border-border mt-auto">
+      <footer className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border mt-auto">
         {/* Traduction */}
         <section>
           <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Traduction rapide
           </h3>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {TRANSLATION_TOOLS.map(tool => (
               <a
                 key={tool.name}
-                href={tool.getUrl(query, language)}
+                href={tool.getUrl ? tool.getUrl(query, language) : '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-w-[70px] bg-surface py-2.5 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer"
+                className="flex flex-col bg-surface rounded-xl border border-border p-3.5 hover:bg-gray-100 transition-all cursor-pointer group"
               >
-                {tool.name}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-[13px] text-ink group-hover:text-brand transition-colors">{tool.name}</span>
+                  <span className="accent-dot"></span>
+                </div>
+                <p className="text-[11px] text-gray-500 mb-3 leading-snug flex-grow">{tool.desc}</p>
+                <div className="flex flex-wrap gap-1">
+                  {tool.specs.map((s) => (
+                    <span key={s} className="text-[10px] bg-white border border-border rounded px-1.5 py-0.5 text-gray-500 font-medium">{s}</span>
+                  ))}
+                </div>
               </a>
             ))}
           </div>
@@ -450,17 +465,25 @@ export default function App() {
           <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
             Outils Image
           </h3>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {IMAGE_TOOLS.map((tool) => (
               <a
                 key={tool.name}
                 href={tool.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={tool.desc}
-                className="bg-surface py-2.5 px-3 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
+                className="flex flex-col bg-surface rounded-xl border border-border p-3.5 hover:bg-gray-100 transition-all cursor-pointer group"
               >
-                {tool.name}
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-bold text-[13px] text-ink group-hover:text-brand transition-colors">{tool.name}</span>
+                  <span className="accent-dot"></span>
+                </div>
+                <p className="text-[11px] text-gray-500 mb-3 leading-snug flex-grow">{tool.desc}</p>
+                <div className="flex flex-wrap gap-1">
+                  {tool.specs.map((s) => (
+                    <span key={s} className="text-[10px] bg-white border border-border rounded px-1.5 py-0.5 text-gray-500 font-medium">{s}</span>
+                  ))}
+                </div>
               </a>
             ))}
           </div>
