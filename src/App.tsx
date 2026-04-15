@@ -253,251 +253,251 @@ const TRANSCRIPTION_TOOLS: {
 
 
 export default function App() {
-const [query, setQuery] = useState('');
-const [contentType, setContentType] = useState<ContentType>('text');
-const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-const [language, setLanguage] = useState<Language>('fr');
-const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [contentType, setContentType] = useState<ContentType>('text');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [language, setLanguage] = useState<Language>('fr');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-const handleCopy = (text: string, id: string) => {
-  navigator.clipboard.writeText(text);
-  setCopiedId(id);
-  setTimeout(() => setCopiedId(null), 2000);
-};
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
-const results = useMemo(() => {
-  if (!query.trim()) return [];
-  return PLATFORMS.map(p => {
-    const generated = p.generateQuery(query, contentType, dateFilter, language);
-    return {
-      ...p,
-      generated,
-      url: p.generateUrl(generated, dateFilter, language),
-    };
-  });
-}, [query, contentType, dateFilter, language]);
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
+    return PLATFORMS.map(p => {
+      const generated = p.generateQuery(query, contentType, dateFilter, language);
+      return {
+        ...p,
+        generated,
+        url: p.generateUrl(generated, dateFilter, language),
+      };
+    });
+  }, [query, contentType, dateFilter, language]);
 
-return (
-  <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8 py-8">
-    {/* Header */}
-    <header className="mb-6 flex items-center gap-4">
-      <motion.img
-        src="/images/ff-franz-forge-logo.jpg"
-        alt="FranzForge logo"
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
-      />
-      <div className="flex flex-col">
-        <motion.h1
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-[26px] font-extrabold tracking-tight text-brand lowercase leading-none"
-        >
-          franzforge
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="text-sm text-gray-500 font-medium mt-0.5"
-        >
-          la forge à requêtes par franz.
-        </motion.p>
-      </div>
-    </header>
+  return (
+    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8 py-8">
+      {/* Header */}
+      <header className="mb-6 flex items-center gap-4">
+        <motion.img
+          src="/images/ff-franz-forge-logo.jpg"
+          alt="FranzForge logo"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
+        />
+        <div className="flex flex-col">
+          <motion.h1
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[26px] font-extrabold tracking-tight text-brand lowercase leading-none"
+          >
+            franzforge
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-sm text-gray-500 font-medium mt-0.5"
+          >
+            la forge à requêtes par franz.
+          </motion.p>
+        </div>
+      </header>
 
-    {/* Main Search Section */}
-    <main className="flex-grow flex flex-col">
-      <div className="mb-6">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap justify-between items-center gap-2">
-            <label className="text-[11px] uppercase font-bold tracking-wider text-ink">
-              Que cherchez-vous ?
-            </label>
-            <div className="flex bg-surface p-1 rounded-lg gap-0.5 flex-wrap">
-              {LANGUAGES.map(l => (
-                <button
-                  key={l.id}
-                  onClick={() => setLanguage(l.id)}
-                  className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded cursor-pointer transition-all ${language === l.id ? 'bg-white shadow-sm text-ink' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  {l.label}
-                </button>
-              ))}
+      {/* Main Search Section */}
+      <main className="flex-grow flex flex-col">
+        <div className="mb-6">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+              <label className="text-[11px] uppercase font-bold tracking-wider text-ink">
+                Que cherchez-vous ?
+              </label>
+              <div className="flex bg-surface p-1 rounded-lg gap-0.5 flex-wrap">
+                {LANGUAGES.map(l => (
+                  <button
+                    key={l.id}
+                    onClick={() => setLanguage(l.id)}
+                    className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded cursor-pointer transition-all ${language === l.id ? 'bg-white shadow-sm text-ink' : 'text-gray-400 hover:text-gray-600'}`}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Saisissez votre recherche..."
+                className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-lg outline-none focus:ring-0 transition-all placeholder:text-gray-400"
+              />
             </div>
           </div>
-          <div className="relative">
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Saisissez votre recherche..."
-              className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-lg outline-none focus:ring-0 transition-all placeholder:text-gray-400"
-            />
+
+          <div className="flex flex-wrap gap-2 mt-4">
+            {CONTENT_TYPES.map((type) => (
+              <button
+                key={type.id}
+                onClick={() => setContentType(type.id)}
+                className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all cursor-pointer ${contentType === type.id
+                  ? 'bg-brand text-white'
+                  : 'bg-surface text-ink hover:bg-gray-200'
+                  }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {DATE_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setDateFilter(f.id)}
+                className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase transition-all cursor-pointer ${dateFilter === f.id
+                  ? 'bg-ink text-white'
+                  : 'bg-white text-gray-400 border border-border hover:border-gray-400'
+                  }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-4">
-          {CONTENT_TYPES.map((type) => (
-            <button
-              key={type.id}
-              onClick={() => setContentType(type.id)}
-              className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all cursor-pointer ${contentType === type.id
-                ? 'bg-brand text-white'
-                : 'bg-surface text-ink hover:bg-gray-200'
-                }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          {DATE_FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setDateFilter(f.id)}
-              className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase transition-all cursor-pointer ${dateFilter === f.id
-                ? 'bg-ink text-white'
-                : 'bg-white text-gray-400 border border-border hover:border-gray-400'
-                }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Results Grid - Bento Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow mb-6">
-        <AnimatePresence mode="popLayout">
-          {results.map((res, idx) => (
-            <motion.div
-              key={res.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ delay: idx * 0.02 }}
-              className="bg-surface p-4 rounded-xl flex flex-col justify-between"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-lg">{res.emoji}</span>
-                  <h3 className="font-bold text-sm uppercase tracking-tight">{res.name}</h3>
+        {/* Results Grid - Bento Style */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 flex-grow mb-6">
+          <AnimatePresence mode="popLayout">
+            {results.map((res, idx) => (
+              <motion.div
+                key={res.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ delay: idx * 0.02 }}
+                className="bg-surface p-4 rounded-xl flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-lg">{res.emoji}</span>
+                    <h3 className="font-bold text-sm uppercase tracking-tight">{res.name}</h3>
+                  </div>
+                  <span className="accent-dot"></span>
                 </div>
-                <span className="accent-dot"></span>
-              </div>
 
-              <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[11px] text-gray-700 border border-border break-all min-h-[48px]">
-                {res.generated}
-              </div>
+                <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[11px] text-gray-700 border border-border break-all min-h-[48px]">
+                  {res.generated}
+                </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleCopy(res.generated, res.id)}
-                  className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all cursor-pointer ${copiedId === res.id
-                    ? 'bg-green-500 text-white'
-                    : 'bg-[#E5E5E5] text-ink hover:bg-gray-300'
-                    }`}
-                >
-                  {copiedId === res.id ? 'Copié !' : 'Copier'}
-                </button>
-                <a
-                  href={res.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2 bg-ink text-white rounded-md text-[11px] font-bold hover:bg-black transition-all text-center cursor-pointer"
-                >
-                  Ouvrir
-                </a>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleCopy(res.generated, res.id)}
+                    className={`flex-1 py-2 rounded-md text-[11px] font-bold transition-all cursor-pointer ${copiedId === res.id
+                      ? 'bg-green-500 text-white'
+                      : 'bg-[#E5E5E5] text-ink hover:bg-gray-300'
+                      }`}
+                  >
+                    {copiedId === res.id ? 'Copié !' : 'Copier'}
+                  </button>
+                  <a
+                    href={res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2 bg-ink text-white rounded-md text-[11px] font-bold hover:bg-black transition-all text-center cursor-pointer"
+                  >
+                    Ouvrir
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
 
-        {!query && (
-          <div className="col-span-full flex items-center justify-center py-20 bg-surface rounded-xl text-gray-400 italic text-sm">
-            Saisissez quelque chose pour forger vos requêtes...
-          </div>
-        )}
-      </div>
-    </main>
-
-    <footer className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 pt-6 border-t border-border mt-auto">
-      {/* Traduction */}
-      <section>
-        <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
-          Traduction rapide
-        </h3>
-        <div className="flex flex-wrap gap-2.5">
-          {TRANSLATION_TOOLS.map(tool => (
-            <a
-              key={tool.name}
-              href={tool.getUrl(query, language)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 min-w-[70px] bg-surface py-2.5 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer"
-            >
-              {tool.name}
-            </a>
-          ))}
+          {!query && (
+            <div className="col-span-full flex items-center justify-center py-20 bg-surface rounded-xl text-gray-400 italic text-sm">
+              Saisissez quelque chose pour forger vos requêtes...
+            </div>
+          )}
         </div>
-      </section>
+      </main>
 
-      {/* Outils Image */}
-      <section>
+      <footer className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-6 pt-6 border-t border-border mt-auto">
+        {/* Traduction */}
+        <section>
+          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+            Traduction rapide
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
+            {TRANSLATION_TOOLS.map(tool => (
+              <a
+                key={tool.name}
+                href={tool.getUrl(query, language)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 min-w-[70px] bg-surface py-2.5 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer"
+              >
+                {tool.name}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Outils Image */}
+        <section>
+          <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
+            Outils Image
+          </h3>
+          <div className="flex flex-wrap gap-2.5">
+            {IMAGE_TOOLS.map((tool) => (
+              <a
+                key={tool.name}
+                href={tool.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={tool.desc}
+                className="bg-surface py-2.5 px-3 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
+              >
+                {tool.name}
+              </a>
+            ))}
+          </div>
+        </section>
+      </footer>
+
+      {/* Transcription audio / vidéo */}
+      <section className="pt-6 border-t border-border mt-6">
         <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
-          Outils Image
+          Retranscription audio / vidéo
         </h3>
-        <div className="flex flex-wrap gap-2.5">
-          {IMAGE_TOOLS.map((tool) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+          {TRANSCRIPTION_TOOLS.map((tool) => (
             <a
               key={tool.name}
               href={tool.url}
               target="_blank"
               rel="noopener noreferrer"
-              title={tool.desc}
-              className="bg-surface py-2.5 px-3 rounded-lg border border-border text-[12px] font-bold text-center hover:bg-gray-200 transition-all cursor-pointer whitespace-nowrap"
+              className="flex flex-col bg-surface rounded-xl border border-border p-3.5 hover:bg-gray-100 transition-all cursor-pointer group"
             >
-              {tool.name}
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-[13px] text-ink group-hover:text-brand transition-colors">{tool.name}</span>
+                <span className="accent-dot"></span>
+              </div>
+              <p className="text-[11px] text-gray-500 mb-3 leading-snug flex-grow">{tool.desc}</p>
+              <div className="flex flex-wrap gap-1">
+                {tool.specs.map((s) => (
+                  <span key={s} className="text-[10px] bg-white border border-border rounded px-1.5 py-0.5 text-gray-500 font-medium">
+                    {s}
+                  </span>
+                ))}
+              </div>
             </a>
           ))}
         </div>
       </section>
-    </footer>
-
-    {/* Transcription audio / vidéo */}
-    <section className="pt-6 border-t border-border mt-6">
-      <h3 className="text-[12px] uppercase font-bold text-gray-400 mb-3 tracking-wider">
-        Retranscription audio / vidéo
-      </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-        {TRANSCRIPTION_TOOLS.map((tool) => (
-          <a
-            key={tool.name}
-            href={tool.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-col bg-surface rounded-xl border border-border p-3.5 hover:bg-gray-100 transition-all cursor-pointer group"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-[13px] text-ink group-hover:text-brand transition-colors">{tool.name}</span>
-              <span className="accent-dot"></span>
-            </div>
-            <p className="text-[11px] text-gray-500 mb-3 leading-snug flex-grow">{tool.desc}</p>
-            <div className="flex flex-wrap gap-1">
-              {tool.specs.map((s) => (
-                <span key={s} className="text-[10px] bg-white border border-border rounded px-1.5 py-0.5 text-gray-500 font-medium">
-                  {s}
-                </span>
-              ))}
-            </div>
-          </a>
-        ))}
-      </div>
-    </section>
-  </div>
-);
+    </div>
+  );
 }
 

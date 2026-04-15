@@ -1,0 +1,97 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="redGrad" cx="38%" cy="34%" r="65%">
+      <stop offset="0%" stop-color="#ff4444"/>
+      <stop offset="50%" stop-color="#cc0000"/>
+      <stop offset="100%" stop-color="#760000"/>
+    </radialGradient>
+    <radialGradient id="ringGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d0d0d0"/>
+    </radialGradient>
+    <filter id="boltShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="2" dy="3" stdDeviation="4" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Outer dark background circle -->
+  <circle cx="256" cy="256" r="254" fill="#0e0e10"/>
+
+  <!-- White ring -->
+  <circle cx="256" cy="256" r="234" fill="url(#ringGrad)"/>
+
+  <!-- Red main disc -->
+  <circle cx="256" cy="256" r="212" fill="url(#redGrad)"/>
+
+  <!-- Subtle red inner vignette -->
+  <circle cx="256" cy="256" r="212" fill="none" stroke="#5a0000" stroke-width="18" opacity="0.4"/>
+
+  <!-- ============ LEFT F BOLT ============ -->
+  <!-- Main dark body -->
+  <polygon
+    filter="url(#boltShadow)"
+    fill="#0e0e12"
+    points="
+      162,108
+      268,108
+      257,154
+      208,154
+      201,216
+      250,216
+      243,258
+      194,258
+      177,398
+      133,398
+    "
+  />
+  <!-- Top bar right-face highlight (bevel) -->
+  <polygon fill="white" opacity="0.88"
+    points="268,108 262,108 251,154 257,154"/>
+  <!-- Crossbar right-face highlight -->
+  <polygon fill="white" opacity="0.75"
+    points="250,216 244,216 237,258 243,258"/>
+  <!-- Stem inner-right edge highlight (between bars) -->
+  <polygon fill="white" opacity="0.55"
+    points="208,154 202,156 195,216 201,216"/>
+  <!-- Stem lower edge subtle highlight -->
+  <polygon fill="white" opacity="0.30"
+    points="194,258 188,260 170,398 177,398"/>
+
+  <!-- ============ RIGHT F BOLT ============ -->
+  <!-- Main dark body (shifted +84px right) -->
+  <polygon
+    filter="url(#boltShadow)"
+    fill="#0e0e12"
+    points="
+      246,108
+      352,108
+      341,154
+      292,154
+      285,216
+      334,216
+      327,258
+      278,258
+      261,398
+      217,398
+    "
+  />
+  <!-- Top bar right-face highlight -->
+  <polygon fill="white" opacity="0.88"
+    points="352,108 346,108 335,154 341,154"/>
+  <!-- Crossbar right-face highlight -->
+  <polygon fill="white" opacity="0.75"
+    points="334,216 328,216 321,258 327,258"/>
+  <!-- Stem inner-right highlight -->
+  <polygon fill="white" opacity="0.55"
+    points="292,154 286,156 279,216 285,216"/>
+  <!-- Stem lower subtle highlight -->
+  <polygon fill="white" opacity="0.30"
+    points="278,258 272,260 254,398 261,398"/>
+
+  <!-- Outer ring subtle shine arc -->
+  <path d="M 90,190 A 180,180 0 0 1 360,90" fill="none" stroke="white" stroke-width="6" opacity="0.18" stroke-linecap="round"/>
+</svg>
