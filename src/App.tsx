@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 type ContentType = 'text' | 'image' | 'video' | 'pdf' | 'social' | 'file';
@@ -258,12 +258,48 @@ const TRANSCRIPTION_TOOLS: {
   ];
 
 
+function loadPref<T>(key: string, fallback: T): T {
+  try {
+    const v = localStorage.getItem(key);
+    return v !== null ? (JSON.parse(v) as T) : fallback;
+  } catch { return fallback; }
+}
+
 export default function App() {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [query, setQuery] = useState('');
-  const [contentType, setContentType] = useState<ContentType>('text');
-  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
-  const [language, setLanguage] = useState<Language>('fr');
+  const [contentType, setContentType] = useState<ContentType>(() => loadPref('ff_contentType', 'text' as ContentType));
+  const [dateFilter, setDateFilter] = useState<DateFilter>(() => loadPref('ff_dateFilter', 'all' as DateFilter));
+  const [language, setLanguage] = useState<Language>(() => loadPref('ff_language', 'fr' as Language));
+  const [favorites, setFavorites] = useState<Set<string>>(() => new Set(loadPref<string[]>('ff_favorites', [])));
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => { localStorage.setItem('ff_contentType', JSON.stringify(contentType)); }, [contentType]);
+  useEffect(() => { localStorage.setItem('ff_dateFilter', JSON.stringify(dateFilter)); }, [dateFilter]);
+  useEffect(() => { localStorage.setItem('ff_language', JSON.stringify(language)); }, [language]);
+  useEffect(() => { localStorage.setItem('ff_favorites', JSON.stringify([...favorites])); }, [favorites]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+      if (e.key === 'Escape') setShowHelp(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -273,15 +309,21 @@ export default function App() {
 
   const results = useMemo(() => {
     if (!query.trim()) return [];
-    return PLATFORMS.map(p => {
+    const mapped = PLATFORMS.map(p => {
       const generated = p.generateQuery(query, contentType, dateFilter, language);
-      return {
-        ...p,
-        generated,
-        url: p.generateUrl(generated, dateFilter, language),
-      };
+      return { ...p, generated, url: p.generateUrl(generated, dateFilter, language) };
     });
-  }, [query, contentType, dateFilter, language]);
+    return [
+      ...mapped.filter(r => favorites.has(r.id)),
+      ...mapped.filter(r => !favorites.has(r.id)),
+    ];
+  }, [query, contentType, dateFilter, language, favorites]);
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && results.length > 0) {
+      window.open(results[0].url, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-8">
@@ -293,10 +335,16 @@ export default function App() {
       >
         <div className="flex items-center justify-between h-14">
           <span className="font-extrabold text-[13px] text-brand tracking-widest uppercase">FranzForge</span>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <a href="#forge" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Requête</a>
             <a href="#outils" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Outils</a>
-            <a href="#liens" className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors">Liens</a>
+            <button
+              onClick={() => setShowHelp(true)}
+              className="text-[11px] font-bold uppercase tracking-widest text-gray-400 hover:text-ink transition-colors cursor-pointer"
+              aria-label="Ouvrir l'aide"
+            >
+              Aide
+            </button>
           </div>
         </div>
       </nav>
@@ -351,10 +399,12 @@ export default function App() {
             </div>
             <div className="relative">
               <input
+                ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Saisissez votre recherche..."
+                onKeyDown={handleInputKeyDown}
+                placeholder="Saisissez votre recherche… (⏎ = ouvrir le 1er résultat)"
                 className="w-full px-5 py-4 text-lg bg-white border-2 border-ink rounded-xl outline-none focus:border-brand transition-all placeholder:text-gray-300 shadow-sm"
               />
             </div>
@@ -408,7 +458,14 @@ export default function App() {
                     <span className="text-lg">{res.emoji}</span>
                     <h3 className="font-bold text-sm uppercase tracking-tight">{res.name}</h3>
                   </div>
-                  <span className="accent-dot"></span>
+                  <button
+                    onClick={(e) => { e.preventDefault(); toggleFavorite(res.id); }}
+                    className="cursor-pointer text-base leading-none transition-opacity hover:opacity-70"
+                    aria-label={favorites.has(res.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    title={favorites.has(res.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  >
+                    {favorites.has(res.id) ? '⭐' : '☆'}
+                  </button>
                 </div>
 
                 <div className="bg-white p-3 rounded-lg mb-3 flex-grow font-mono text-[11px] text-gray-700 border border-border break-all min-h-[48px]">
@@ -547,12 +604,78 @@ export default function App() {
         />
       </div>
 
+      {/* Modal Aide */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowHelp(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 12 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowHelp(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-ink transition-colors cursor-pointer text-xl leading-none"
+                aria-label="Fermer l'aide"
+              >
+                ✕
+              </button>
+              <h2 className="font-extrabold text-xl text-ink mb-6">Comment ça marche ?</h2>
+              <div className="flex flex-col gap-5 text-sm text-gray-600 leading-relaxed">
+                <div>
+                  <p className="font-bold text-ink mb-1">1 — Saisissez votre terme</p>
+                  <p>Entrez un mot, un auteur, un titre ou n'importe quelle expression dans le champ de recherche. FranzForge génère aussitôt une requête optimisée pour chaque plateforme.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-ink mb-1">2 — Type de contenu</p>
+                  <p><strong>Texte</strong> — recherche dans les pages web. <strong>PDF</strong> — ajoute <code className="bg-surface px-1 rounded text-[11px] font-mono">filetype:pdf</code>. <strong>Image</strong> — oriente vers Google Images. <strong>Social</strong> et <strong>Fichier</strong> adaptent la syntaxe selon la plateforme.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-ink mb-1">3 — Filtre par période</p>
+                  <p>Les filtres 24h / Semaine / Mois / Année agissent sur Google, Google Scholar, YouTube et Reddit via des paramètres URL dédiés. Les autres plateformes ignorent ce filtre.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-ink mb-1">4 — Langue</p>
+                  <p>La langue ne modifie <em>pas</em> votre texte. Elle restreint les résultats côté plateforme : paramètre <code className="bg-surface px-1 rounded text-[11px] font-mono">lr=lang_fr</code> pour Google / Scholar, sous-domaine pour Wikipédia / Wikisource.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-ink mb-1">5 — Favoris ⭐</p>
+                  <p>Cliquez sur l'étoile ☆ d'une plateforme pour l'épingler en haut de la liste. Vos favoris sont mémorisés entre les visites.</p>
+                </div>
+                <div>
+                  <p className="font-bold text-ink mb-1">6 — Raccourcis clavier</p>
+                  <p>
+                    <kbd className="bg-surface border border-border rounded px-1.5 py-0.5 text-[11px] font-mono">Ctrl+K</kbd>
+                    {' '}ou{' '}
+                    <kbd className="bg-surface border border-border rounded px-1.5 py-0.5 text-[11px] font-mono">⌘K</kbd>
+                    {' '}— remet le focus sur la recherche.<br />
+                    <kbd className="bg-surface border border-border rounded px-1.5 py-0.5 text-[11px] font-mono">⏎ Entrée</kbd>
+                    {' '}— ouvre directement le premier résultat (ou votre favori épinglé).<br />
+                    <kbd className="bg-surface border border-border rounded px-1.5 py-0.5 text-[11px] font-mono">Echap</kbd>
+                    {' '}— ferme ce panneau.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Footer Arx Systema */}
       <footer role="contentinfo" className="mt-10 py-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
         <p className="text-[11px] text-gray-400 tracking-wide">
           Propulsé par{' '}
           <a
-            href="https://arxsystema.com"
+            href="https://arx-systema.fr"
             target="_blank"
             rel="noopener noreferrer"
             className="font-bold text-ink hover:text-brand transition-colors"
